@@ -2,14 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { mapRow, PRODUCT_COLUMNS, PRODUCT_COLUMNS_LEGACY, isMissingBulkColumns } from "@/lib/products"
-import type { SessionUser } from "@/lib/auth"
-import type { Product, ProductRow } from "@/lib/types"
+import { mapRow, selectProducts, getProductById as getProductByIdImpl } from "@/lib/products"
+import { getDeliveryProfile, getSessionUser } from "@/lib/auth"
+import type { SessionUser, DeliveryProfile } from "@/lib/auth"
+import type { Product } from "@/lib/types"
 
 /**
  * Busca produtos diretamente no banco (não filtra resultados já carregados).
  * Aceita um termo de texto (nome/marca/categoria/descrição) e/ou uma categoria
  * de alto nível. A categoria é aplicada sobre o valor derivado em `mapRow`.
+ * Produtos inativos são omitidos.
  */
 export async function searchProducts(opts: {
   query?: string
@@ -18,7 +20,7 @@ export async function searchProducts(opts: {
   const supabase = await createClient()
   const term = (opts.query ?? "").trim().replace(/[,()%]/g, " ").trim()
 
-  const run = (columns: string) => {
+  const { data, error } = await selectProducts((columns) => {
     let q = supabase
       .from("products")
       .select(columns)
@@ -29,24 +31,37 @@ export async function searchProducts(opts: {
       q = q.or(`name.ilike.${like},brand.ilike.${like},category.ilike.${like},description.ilike.${like}`)
     }
     return q
-  }
-
-  let { data, error } = await run(PRODUCT_COLUMNS)
-  if (error && isMissingBulkColumns(error.message)) {
-    // Migração de promoção por quantidade ainda não rodou → usa colunas legadas.
-    ;({ data, error } = await run(PRODUCT_COLUMNS_LEGACY))
-  }
+  })
 
   if (error) {
     console.log("[v0] searchProducts error:", error.message)
     return []
   }
 
-  let products = (data as unknown as ProductRow[]).map(mapRow)
+  let products = (data ?? []).map(mapRow).filter((p) => p.active)
   if (opts.category && opts.category !== "Tudo") {
     products = products.filter((p) => p.cat === opts.category)
   }
   return products
+}
+
+/** Server action: revalida UM produto no DB (preço, estoque e status ativo). */
+export async function getProductById(id: string): Promise<Product | null> {
+  return getProductByIdImpl(id)
+}
+
+/**
+ * Revalida a identidade do cliente no banco ANTES de abrir o checkout: lê a
+ * sessão atual e os dados de entrega salvos no perfil. Garante que o modal
+ * abra sempre com os dados mais recentes (nome/telefone/endereço), em vez de
+ * confiar no que foi carregado na renderização inicial da página.
+ */
+export async function getCheckoutIdentity(): Promise<{
+  user: SessionUser | null
+  profile: DeliveryProfile | null
+}> {
+  const [user, profile] = await Promise.all([getSessionUser(), getDeliveryProfile()])
+  return { user, profile }
 }
 
 export type SubmitOrderInput = {

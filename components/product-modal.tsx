@@ -64,7 +64,16 @@ export function ProductModal({
                   {product.title}
                 </h3>
                 <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--ink)]/70">{product.desc}</p>
-                {product.stock > 0 ? (
+                {product.active === false ? (
+                  <div className="mt-5 flex items-center gap-3 rounded-[1.25rem] border-2 border-[var(--ink)] bg-[var(--ink)]/5 px-4 py-3">
+                    <span className="text-[11px] font-black uppercase tracking-wide text-[var(--ink)]/70">
+                      disponibilidade
+                    </span>
+                    <span className="ml-auto text-lg font-black uppercase tracking-wide text-[var(--ink)]/55">
+                      Produto indisponível
+                    </span>
+                  </div>
+                ) : product.stock > 0 ? (
                   <>
                     <div className="mt-5 flex items-center gap-3 rounded-[1.25rem] border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-3">
                       <span className="text-[11px] font-black uppercase tracking-wide text-[var(--ink)]/70">preço</span>
@@ -94,12 +103,16 @@ export function ProductModal({
               </div>
 
               <button
-                disabled={product.stock <= 0}
+                disabled={product.stock <= 0 || product.active === false}
                 onClick={() => onAdd(product)}
                 className="group mt-5 flex w-full items-center justify-between border-t-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-5 text-left text-white transition-colors active:bg-[var(--pink)] disabled:cursor-not-allowed disabled:opacity-40 sm:mt-auto sm:hover:bg-[var(--pink)]"
               >
                 <span className="text-base font-black uppercase tracking-wide">
-                  {product.stock > 0 ? "Adicionar à sacola" : "Produto esgotado"}
+                  {product.active === false
+                    ? "Produto indisponível"
+                    : product.stock > 0
+                      ? "Adicionar à sacola"
+                      : "Produto esgotado"}
                 </span>
                 <IconPlus className="h-6 w-6 transition-transform group-active:rotate-90" />
               </button>

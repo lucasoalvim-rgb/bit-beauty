@@ -30,8 +30,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = cart.reduce((n, l) => n + l.qty * l.product.price, 0)
 
   function addToCart(product: Product, qty = 1) {
-    // Sem estoque → nada a adicionar.
-    if (product.stock <= 0) return
+    // Produto inativo ou sem estoque → nada a adicionar.
+    if (product.active === false || product.stock <= 0) return
 
     // Nunca deixa a sacola passar do estoque disponível. Calcula a quantidade
     // que de fato cabe (clamp) a partir do que já existe na sacola.
