@@ -12,7 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   pending: "Em processamento",
   paid: "Pago",
   shipped: "Enviado",
-  delivered: "Entregue",
+  delivered: "Entregue!",
   cancelled: "Cancelado",
 }
 
