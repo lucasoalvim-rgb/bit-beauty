@@ -40,7 +40,7 @@ export function ProductModal({
 
           <div className="sm:flex sm:h-full sm:flex-row">
             {/* Coluna da imagem */}
-            <div className="relative bg-[var(--pink)]/10 sm:flex sm:w-1/2 sm:items-center sm:justify-center sm:border-r-2 sm:border-[var(--ink)]">
+            <div className="relative bg-white sm:flex sm:w-1/2 sm:items-center sm:justify-center sm:border-r-2 sm:border-[var(--ink)]">
               {product.badge ? (
                 <span className="absolute left-4 top-4 z-10 -rotate-3 rounded-full bg-[var(--accent)] px-3 py-1 text-[11px] font-black uppercase text-[var(--ink)] ring-2 ring-[var(--ink)]">
                   {product.badge}

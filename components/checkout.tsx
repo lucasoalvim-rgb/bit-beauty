@@ -13,6 +13,22 @@ import { IconBack, IconCheck, IconArrow } from "@/components/icons"
 /** Número da loja (WhatsApp) — apenas dígitos, com código do país. */
 const STORE_WHATSAPP = "5544998332306"
 
+/**
+ * autoComplete por campo do checkout. Os campos de senha recebem "off" porque
+ * são renderizados como texto mascarado (o navegador não deve oferecer gerar
+ * senha). Os campos de endereço recebem tokens semânticos para autopreenchimento
+ * útil (mas nunca como credencial).
+ */
+const AUTOCOMPLETE_BY_KEY: Record<string, string> = {
+  name: "name",
+  phone: "tel",
+  cep: "postal-code",
+  street: "address-line1",
+  number: "address-line2",
+  password: "off",
+  passwordConfirm: "off",
+}
+
 /** Um passo está "preenchido" quando seu valor já é válido (vindo do perfil). */
 function isFieldFilled(key: string, data: Record<string, string>): boolean {
   if (key === "phone") {
@@ -143,6 +159,7 @@ export function Checkout({
   const isLast = step === steps.length - 1
   const value = data[field?.key] ?? ""
   const isPayStep = field?.key === "payment"
+  const isPasswordField = field?.key === "password" || field?.key === "passwordConfirm"
   const phoneDigits = (data.phone ?? "").replace(/\D/g, "")
   const phoneValid = phoneDigits.length >= 10 && phoneDigits.length <= 11
   const cepDigits = (data.cep ?? "").replace(/\D/g, "")
@@ -493,15 +510,23 @@ export function Checkout({
                 <>
                   <input
                     autoFocus
-                    type={field.type ?? "text"}
+                    // Campos de senha são renderizados como "text" + mascaramento
+                    // CSS para que o navegador NÃO os identifique como credencial
+                    // e, assim, não ofereça gerar/sugerir senha (nem contamine os
+                    // passos seguintes, como CEP). Demais campos mantêm o tipo real.
+                    type={isPasswordField ? "text" : (field.type ?? "text")}
                     inputMode={field.inputMode}
-                    autoComplete={
-                      field.key === "password"
-                        ? "new-password"
-                        : field.key === "passwordConfirm"
-                          ? "new-password"
-                          : undefined
-                    }
+                    // autoComplete explícito por campo: evita que o navegador
+                    // trate CEP/rua/número como parte de um formulário de login.
+                    autoComplete={AUTOCOMPLETE_BY_KEY[field.key] ?? "off"}
+                    autoCorrect="off"
+                    autoCapitalize={field.key === "name" ? "words" : "off"}
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
+                    name={`bb-${field.key}`}
+                    style={isPasswordField ? ({ WebkitTextSecurity: "disc" } as React.CSSProperties) : undefined}
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={(e) => {

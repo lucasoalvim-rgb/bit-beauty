@@ -147,6 +147,7 @@ export function AuthView({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Maria Silva"
+              autoComplete="name"
               className="w-full rounded-2xl border-2 border-[var(--ink)] bg-white px-5 py-4 text-base font-bold text-[var(--ink)] placeholder:font-semibold placeholder:text-[var(--ink)]/40 focus:outline-none focus:ring-4 focus:ring-[var(--accent)]"
             />
           </label>
@@ -159,13 +160,25 @@ export function AuthView({
             value={phone}
             onChange={(e) => setPhone(maskPhone(e.target.value))}
             placeholder="(00) 00000-0000"
+            autoComplete="tel"
             className="w-full rounded-2xl border-2 border-[var(--ink)] bg-white px-5 py-4 text-base font-bold text-[var(--ink)] placeholder:font-semibold placeholder:text-[var(--ink)]/40 focus:outline-none focus:ring-4 focus:ring-[var(--accent)]"
           />
         </label>
         <label className="flex flex-col gap-2">
           <span className="px-1 text-xs font-black uppercase tracking-wider text-[var(--ink)]">Senha</span>
           <input
-            type="password"
+            // No login mantemos type=password (autofill de senha salva é
+            // desejável). No registro, renderizamos como texto mascarado para o
+            // navegador não sugerir/gerar uma senha automaticamente.
+            type={mode === "login" ? "password" : "text"}
+            style={mode === "register" ? ({ WebkitTextSecurity: "disc" } as React.CSSProperties) : undefined}
+            autoComplete={mode === "login" ? "current-password" : "off"}
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-form-type="other"
             value={pass}
             onChange={(e) => setPass(e.target.value)}
             onKeyDown={(e) => {
@@ -179,7 +192,17 @@ export function AuthView({
           <label className="flex flex-col gap-2">
             <span className="px-1 text-xs font-black uppercase tracking-wider text-[var(--ink)]">Repita a senha</span>
             <input
-              type="password"
+              // Texto mascarado (não type=password) para evitar a sugestão de
+              // senha do navegador no fluxo de cadastro.
+              type="text"
+              style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-form-type="other"
               value={passConfirm}
               onChange={(e) => setPassConfirm(e.target.value)}
               onKeyDown={(e) => {
