@@ -59,6 +59,11 @@ export function BagSheet({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-extrabold leading-tight text-[var(--ink)]">{l.product.title}</p>
                       <p className="text-sm font-black text-[var(--pink)]">R${money(l.product.price * l.qty)}</p>
+                      {l.qty >= l.product.stock && (
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink)]/45">
+                          Máximo em estoque
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 rounded-full border-2 border-[var(--ink)] px-1.5 py-1">
                       <button
@@ -71,8 +76,9 @@ export function BagSheet({
                       <span className="w-5 text-center text-sm font-black text-[var(--ink)]">{l.qty}</span>
                       <button
                         aria-label="Aumentar"
+                        disabled={l.qty >= l.product.stock}
                         onClick={() => changeQty(l.product.id, 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ink)] text-[var(--pink)] transition-transform active:scale-90"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ink)] text-[var(--pink)] transition-transform active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         <IconPlus className="h-4 w-4" />
                       </button>
