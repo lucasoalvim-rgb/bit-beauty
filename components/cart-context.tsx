@@ -30,15 +30,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = cart.reduce((n, l) => n + l.qty * l.product.price, 0)
 
   function addToCart(product: Product, qty = 1) {
-    // total determinístico: adicionar N unidades sempre soma price*qty ao total atual,
-    // independente de o item já existir ou não na sacola.
-    const newTotal = total + product.price * qty
+    // Sem estoque → nada a adicionar.
+    if (product.stock <= 0) return
+
+    // Nunca deixa a sacola passar do estoque disponível. Calcula a quantidade
+    // que de fato cabe (clamp) a partir do que já existe na sacola.
+    const current = cart.find((l) => l.product.id === product.id)?.qty ?? 0
+    const addedQty = Math.min(current + qty, product.stock) - current
+    if (addedQty <= 0) return // já está no máximo do estoque
+
+    // total determinístico: soma apenas a quantidade realmente adicionada.
+    const newTotal = total + product.price * addedQty
 
     setCart((prev) => {
       const found = prev.find((l) => l.product.id === product.id)
       return found
-        ? prev.map((l) => (l.product.id === product.id ? { ...l, qty: l.qty + qty } : l))
-        : [...prev, { product, qty }]
+        ? prev.map((l) =>
+            l.product.id === product.id ? { ...l, qty: Math.min(l.qty + qty, product.stock) } : l,
+          )
+        : [...prev, { product, qty: Math.min(qty, product.stock) }]
     })
 
     // feedback "check" no botão do produto
@@ -57,7 +67,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   function changeQty(id: string, delta: number) {
     setCart((prev) =>
-      prev.map((l) => (l.product.id === id ? { ...l, qty: l.qty + delta } : l)).filter((l) => l.qty > 0),
+      prev
+        .map((l) =>
+          // Mantém a quantidade entre 0 e o estoque disponível — o "+" nunca
+          // passa do que há em estoque.
+          l.product.id === id
+            ? { ...l, qty: Math.min(Math.max(l.qty + delta, 0), l.product.stock) }
+            : l,
+        )
+        .filter((l) => l.qty > 0),
     )
   }
 

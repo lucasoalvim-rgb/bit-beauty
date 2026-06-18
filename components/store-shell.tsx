@@ -66,6 +66,10 @@ function Shell({
     const params = new URLSearchParams(window.location.search)
     const produtoId = params.get("produto")
     const revistaSlug = params.get("revista")
+    // Abre só a aba de revistas, sem apontar para nenhuma específica:
+    // ?revistas  ·  ?aba=revistas  ·  ?tab=revistas
+    const revistasTab =
+      params.has("revistas") || ["revistas", "revista"].includes((params.get("aba") ?? params.get("tab") ?? "").toLowerCase())
 
     if (produtoId) {
       const p = products.find((x) => x.id === produtoId)
@@ -74,9 +78,12 @@ function Shell({
       const page = Math.max(1, Number.parseInt(params.get("pagina") ?? "1", 10) || 1)
       setDeepMagazine({ slug: revistaSlug, page })
       setTab("revistas")
+    } else if (revistasTab) {
+      // Vai direto para a estante de revistas (nenhum leitor aberto).
+      setTab("revistas")
     }
 
-    if (produtoId || revistaSlug) {
+    if (produtoId || revistaSlug || revistasTab) {
       // Remove os params para não reabrir ao navegar/atualizar.
       window.history.replaceState({}, "", window.location.pathname)
     }

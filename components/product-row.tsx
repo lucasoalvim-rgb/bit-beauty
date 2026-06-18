@@ -18,6 +18,7 @@ export function ProductRow({
   onAdd: (p: Product) => void
 }) {
   const promo = getPromo(p)
+  const outOfStock = p.stock <= 0
   return (
     <article
       onClick={() => onSelect(p)}
@@ -44,21 +45,28 @@ export function ProductRow({
         )}
         {/* Preço na parte de baixo, ao lado do botão de adicionar. */}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <span className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black leading-tight text-[var(--ink)]">R${money(p.price)}</span>
-            {promo?.type === "discount" && (
-              <span className="text-xs font-bold leading-tight text-[var(--ink)]/45 line-through">
-                R${money(promo.oldPrice)}
-              </span>
-            )}
-          </span>
+          {outOfStock ? (
+            <span className="rounded-full bg-[var(--ink)]/10 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-[var(--ink)]/55">
+              Fora de estoque
+            </span>
+          ) : (
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-xl font-black leading-tight text-[var(--ink)]">R${money(p.price)}</span>
+              {promo?.type === "discount" && (
+                <span className="text-xs font-bold leading-tight text-[var(--ink)]/45 line-through">
+                  R${money(promo.oldPrice)}
+                </span>
+              )}
+            </span>
+          )}
           <button
-            aria-label={`Adicionar ${p.title} à sacola`}
+            aria-label={outOfStock ? `${p.title} esgotado` : `Adicionar ${p.title} à sacola`}
+            disabled={outOfStock}
             onClick={(e) => {
               e.stopPropagation()
               onAdd(p)
             }}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90 ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 ${
               added ? "bg-[var(--accent)] text-[var(--ink)]" : "bg-[var(--ink)] text-[var(--pink)]"
             }`}
           >

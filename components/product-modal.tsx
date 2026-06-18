@@ -64,24 +64,33 @@ export function ProductModal({
                   {product.title}
                 </h3>
                 <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--ink)]/70">{product.desc}</p>
-                <div className="mt-5 flex items-center gap-3 rounded-[1.25rem] border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-3">
-                  <span className="text-[11px] font-black uppercase tracking-wide text-[var(--ink)]/70">preço</span>
-                  <div className="ml-auto flex items-baseline gap-2">
-                    {product.oldPrice ? (
-                      <span className="text-sm font-bold text-[var(--ink)]/45 line-through">
-                        R${money(product.oldPrice)}
-                      </span>
-                    ) : null}
-                    <span className="text-3xl font-black text-[var(--ink)]">R${money(product.price)}</span>
+                {product.stock > 0 ? (
+                  <>
+                    <div className="mt-5 flex items-center gap-3 rounded-[1.25rem] border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-3">
+                      <span className="text-[11px] font-black uppercase tracking-wide text-[var(--ink)]/70">preço</span>
+                      <div className="ml-auto flex items-baseline gap-2">
+                        {product.oldPrice ? (
+                          <span className="text-sm font-bold text-[var(--ink)]/45 line-through">
+                            R${money(product.oldPrice)}
+                          </span>
+                        ) : null}
+                        <span className="text-3xl font-black text-[var(--ink)]">R${money(product.price)}</span>
+                      </div>
+                    </div>
+                    <p className="mt-2 px-1 text-xs font-bold uppercase tracking-wide text-[var(--ink)]/55">
+                      {product.stock <= 2 ? `Últimas ${product.stock} unidades` : "Em estoque"}
+                    </p>
+                  </>
+                ) : (
+                  <div className="mt-5 flex items-center gap-3 rounded-[1.25rem] border-2 border-[var(--ink)] bg-[var(--ink)]/5 px-4 py-3">
+                    <span className="text-[11px] font-black uppercase tracking-wide text-[var(--ink)]/70">
+                      disponibilidade
+                    </span>
+                    <span className="ml-auto text-lg font-black uppercase tracking-wide text-[var(--ink)]/55">
+                      Fora de estoque
+                    </span>
                   </div>
-                </div>
-                <p className="mt-2 px-1 text-xs font-bold uppercase tracking-wide text-[var(--ink)]/55">
-                  {product.stock > 0
-                    ? product.stock <= 2
-                      ? `Últimas ${product.stock} unidades`
-                      : "Em estoque"
-                    : "Esgotado"}
-                </p>
+                )}
               </div>
 
               <button
