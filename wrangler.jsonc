@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "vanira-batista",
+  "name": "bit-beauty",
   "compatibility_date": "2025-03-25",
   "compatibility_flags": [
     // Habilita as APIs do Node.js no runtime do Workers
@@ -17,7 +17,7 @@
     {
       "binding": "WORKER_SELF_REFERENCE",
       // Deve corresponder ao "name" do worker acima
-      "service": "vanira-batista"
+      "service": "bit-beauty"
     }
   ]
   // Para habilitar o cache incremental do Next.js, crie um bucket R2 e
