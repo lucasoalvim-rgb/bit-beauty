@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "vanira-batista",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": [
+    // Habilita as APIs do Node.js no runtime do Workers
+    "nodejs_compat",
+    // Permite que o app faça fetch de URLs externas
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      // Deve corresponder ao "name" do worker acima
+      "service": "vanira-batista"
+    }
+  ]
+  // Para habilitar o cache incremental do Next.js, crie um bucket R2 e
+  // descomente o binding abaixo (veja https://opennext.js.org/cloudflare/caching):
+  // "r2_buckets": [
+  //   { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "<BUCKET_NAME>" }
+  // ]
+}

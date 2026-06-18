@@ -1,0 +1,11 @@
+name = "ml-api"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+
+# As credenciais NÃO ficam aqui. Defina-as como secrets:
+#   wrangler secret put ML_CLIENT_ID
+#   wrangler secret put ML_CLIENT_SECRET
+#   wrangler secret put ML_REFRESH_TOKEN
+#
+# Para desenvolvimento local, crie um arquivo .dev.vars (já ignorado pelo git)
+# com as três variáveis no formato CHAVE=valor.
