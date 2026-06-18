@@ -16,6 +16,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { SideNav } from "@/components/side-nav"
 import type { Product, Magazine } from "@/lib/types"
 import type { SessionUser, DeliveryProfile } from "@/lib/auth"
+import { getProductById, getCheckoutIdentity } from "@/lib/actions"
 
 /** Shell: liga todas as telas, overlays e o estado de navegação. */
 function Shell({
@@ -73,7 +74,8 @@ function Shell({
 
     if (produtoId) {
       const p = products.find((x) => x.id === produtoId)
-      if (p) setSelected(p)
+      // Abre via handleSelect para revalidar preço/estoque/ativo no banco.
+      if (p) handleSelect(p)
     } else if (revistaSlug) {
       const page = Math.max(1, Number.parseInt(params.get("pagina") ?? "1", 10) || 1)
       setDeepMagazine({ slug: revistaSlug, page })
@@ -90,8 +92,19 @@ function Shell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Ao abrir um produto: mostra na hora o que já temos (instantâneo) e, em
+  // paralelo, REVALIDA preço/estoque/ativo direto no banco. Se mudou, o modal
+  // reflete o dado fresco; se o produto sumiu do catálogo, fecha o modal.
   function handleSelect(p: Product) {
     setSelected(p)
+    getProductById(p.id).then((fresh) => {
+      if (!fresh) {
+        // Produto não existe mais → fecha se ainda for o que está aberto.
+        setSelected((cur) => (cur && cur.id === p.id ? null : cur))
+        return
+      }
+      setSelected((cur) => (cur && cur.id === fresh.id ? fresh : cur))
+    })
   }
 
   function handleAdd(p: Product) {
@@ -106,6 +119,13 @@ function Shell({
   // sequencial para o back() da sacola não fechar o checkout recém-aberto.
   function startCheckout() {
     setBagOpen(false)
+    // SEMPRE revalida a identidade do cliente no banco antes de abrir o modal:
+    // usuários já cadastrados têm nome/telefone/endereço salvos, então o
+    // checkout abre com os dados mais recentes (não com os do carregamento).
+    getCheckoutIdentity().then(({ user: freshUser, profile: freshProfile }) => {
+      if (freshUser) setUser(freshUser)
+      setProfile(freshProfile)
+    })
     setTimeout(() => setCheckoutOpen(true), 360)
   }
 

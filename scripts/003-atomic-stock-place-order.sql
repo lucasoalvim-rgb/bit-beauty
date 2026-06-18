@@ -9,7 +9,15 @@
 --   pedido espera o primeiro concluir e só então lê o estoque já atualizado.
 --   Se não houver estoque suficiente, o pedido inteiro é abortado (transação faz
 --   rollback) e nada é cobrado nem baixado.
+--
+-- IMPORTANTE (correção): usamos `raise exception using message = '...'`.
+--   NÃO passe também um texto literal após `raise exception` — isso define a
+--   mensagem duas vezes e causa: "RAISE option already specified: message".
 -- ============================================================================
+
+-- Flag de produto ativo (catálogo). Produtos inativos não podem ser comprados.
+alter table public.products
+  add column if not exists is_active boolean not null default true;
 
 -- Recria a função com a MESMA assinatura usada pela aplicação (lib/actions.ts).
 -- DROP + CREATE evita conflito de tipo de retorno em recriações futuras.
@@ -44,17 +52,19 @@ declare
   v_price     numeric;
   v_name      text;
   v_stock     integer;
+  v_active    boolean;
 begin
   if v_user_id is null then
-    raise exception 'AUTH_REQUIRED'
-      using message = 'Sessão expirada. Entre novamente para finalizar a compra.';
+    raise exception using
+      errcode = 'P0001',
+      message = 'Sessão expirada. Entre novamente para finalizar a compra.';
   end if;
 
   if p_items is null or jsonb_array_length(p_items) = 0 then
-    raise exception 'EMPTY_CART' using message = 'Sua sacola está vazia.';
+    raise exception using errcode = 'P0001', message = 'Sua sacola está vazia.';
   end if;
 
-  -- 1) TRAVA cada produto e valida o estoque de forma atômica.
+  -- 1) TRAVA cada produto e valida disponibilidade/estoque de forma atômica.
   --    O FOR UPDATE serializa pedidos concorrentes do mesmo item.
   for v_item in select * from jsonb_array_elements(p_items)
   loop
@@ -64,20 +74,28 @@ begin
       continue;
     end if;
 
-    select stock, price, name
-      into v_stock, v_price, v_name
+    select stock, price, name, coalesce(is_active, true)
+      into v_stock, v_price, v_name, v_active
       from products
      where id = v_pid
      for update;
 
     if not found then
-      raise exception 'PRODUCT_NOT_FOUND'
-        using message = 'Um item da sua sacola não está mais disponível.';
+      raise exception using
+        errcode = 'P0001',
+        message = 'Um item da sua sacola não está mais disponível.';
+    end if;
+
+    if not v_active then
+      raise exception using
+        errcode = 'P0001',
+        message = format('"%s" não está mais disponível.', v_name);
     end if;
 
     if v_stock < v_qty then
-      raise exception 'OUT_OF_STOCK'
-        using message = format(
+      raise exception using
+        errcode = 'P0001',
+        message = format(
           'Estoque insuficiente para "%s": restam %s unidade(s).', v_name, v_stock
         );
     end if;
@@ -118,8 +136,9 @@ begin
        and stock >= v_qty;
 
     if not found then
-      raise exception 'OUT_OF_STOCK'
-        using message = format('Estoque insuficiente para "%s".', v_name);
+      raise exception using
+        errcode = 'P0001',
+        message = format('Estoque insuficiente para "%s".', v_name);
     end if;
   end loop;
 

@@ -15,6 +15,8 @@ export type Product = {
   cat: string
   volume?: string | null
   stock: number
+  /** Produto ativo no catálogo. `false` => removido/indisponível para compra. */
+  active: boolean
   tags?: string[]
 }
 
@@ -33,6 +35,7 @@ export type ProductRow = {
   image: string | null
   description: string | null
   volume: string | null
+  is_active?: boolean | null
 }
 
 /** Revista exibida no leitor. As páginas vivem no CDN em /revistas/{slug}/NNNN.jpg */
