@@ -39,4 +39,4 @@ export const PAYMENTS: PayMethod[] = [
 export const MAX_INSTALLMENTS = 12
 export const CREDIT_FEE_MIN = 5
 export const CREDIT_FEE_MAX = 13
-export const DELIVERY_FEE = 5
+export const DELIVERY_FEE = 0
